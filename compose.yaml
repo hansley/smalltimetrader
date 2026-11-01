@@ -1,0 +1,34 @@
+services:
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_PATH: /app/data/trader.sqlite
+      COOKIE_SECURE: "true"
+    volumes:
+      - trader-data:/app/data
+    expose:
+      - "8000"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+  proxy:
+    image: caddy:2-alpine
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN to your public hostname}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+volumes:
+  trader-data:
+  caddy-data:
+  caddy-config:
